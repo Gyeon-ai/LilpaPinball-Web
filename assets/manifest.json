@@ -1,0 +1,28 @@
+{
+  "name": "릴파 핀볼",
+  "short_name": "릴파 핀볼",
+  "id": "../",
+  "icons": [
+    {
+      "src": "lilpa-pinball-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "lilpa-pinball-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "../",
+  "scope": "../",
+  "theme_color": "#14132a",
+  "background_color": "#14132a",
+  "display_override": [
+    "fullscreen",
+    "minimal-ui"
+  ],
+  "display": "standalone"
+}

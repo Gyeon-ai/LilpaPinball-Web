@@ -1,0 +1,726 @@
+// 오락실 도트 테마: 어두운 남색 바탕, 각진 도트 테두리, 굵은 단추, 도트 숫자.
+@font-face {
+  font-family: 'Galmuri11';
+  src: url(https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/Galmuri11.woff2) format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Galmuri11';
+  src: url(https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/Galmuri11-Bold.woff2) format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+// 릴파 판 색(2026-11-18 디자인 "릴파 박쥐 밤" 1차안, 미확정): 남색 머리·파란 브리지·호박색 눈·박쥐/뱀파이어
+:root {
+  --ui-font: 'Noto Sans KR', 'Pretendard Variable', Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
+  --dot-font: 'Galmuri11', 'Noto Sans KR', sans-serif;
+  --number-font: 'Press Start 2P', 'Galmuri11', monospace;
+  --dot-bg: #14132a;
+  --dot-band: #2a2563;
+  --dot-box: #2b2d55;
+  --dot-line: #5a5fa8;
+  --dot-line-soft: #a9b0ff;
+  --dot-ink: #0c0b1a;
+  --dot-text: #f2f0ff;
+  --dot-accent: #ffb04a;
+  --dot-red: #c4223a;
+  --dot-red-deep: #5a1238;
+  --dot-blue: #4d6bff;
+  --dot-cyan: #8f9bff;
+  // 십자 모양 그림자로 만드는 도트 테두리(모서리가 한 칸 빈다)
+  --dot-border: 0 -4px 0 var(--dot-line), 0 4px 0 var(--dot-line), -4px 0 0 var(--dot-line), 4px 0 0 var(--dot-line);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--ui-font);
+}
+
+body {
+  font-weight: 400;
+  font-synthesis: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.icon {
+  background: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center center;
+  mask-size: contain;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  vertical-align: middle;
+
+  &.play {
+    mask-image: url('images/play.svg');
+  }
+
+  &.shuffle {
+    mask-image: url('images/shuffle.svg');
+  }
+
+  &.map {
+    mask-image: url('images/map.svg');
+  }
+
+}
+
+
+#settings {
+  position: fixed;
+  bottom: 16px;
+  left: 20px;
+  background: var(--dot-box);
+  border: 0;
+  border-radius: 0;
+  padding: 8px;
+  color: var(--dot-text);
+  box-shadow: var(--dot-border), 0 8px 0 var(--dot-ink);
+  z-index: 999;
+  width: clamp(640px, 44vw, 760px);
+  min-width: 640px;
+  gap: 8px;
+
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+  transition: visibility 0s, opacity 1s linear;
+
+  &.game-running {
+    min-width: 0;
+    width: auto;
+    // 캔버스 확대율을 반영한 미니맵의 실제 오른쪽 끝(도트 테두리 포함)에서 12px 떨어뜨린다.
+    left: max(20px, min(244px, calc(17.8125vw + 16px), calc(100vw - 302px)));
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+
+    div.left,
+    .setup-actions,
+    div.right div.row:not(.speed-row) {
+      display: none;
+    }
+
+    .collapsible-rows {
+      display: block;
+    }
+
+    div.right {
+      width: auto;
+    }
+
+    div.right div.speed-row {
+      display: flex;
+      height: auto;
+      padding: 8px;
+      background: var(--dot-box);
+      box-shadow: var(--dot-border), 0 8px 0 var(--dot-ink);
+    }
+  }
+
+  ::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(127, 127, 127, .22);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--dot-line-soft);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: 0;
+  }
+
+  button {
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.12);
+    }
+  }
+
+  textarea {
+    width: 100%;
+    height: 100%;
+    min-height: 128px;
+    resize: none;
+    border: 4px solid var(--dot-line-soft);
+    border-radius: 0;
+    background: var(--dot-bg);
+    color: var(--dot-text);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.45;
+    padding: 8px 12px;
+
+    &::placeholder {
+      color: var(--dot-line-soft);
+    }
+  }
+
+  div.left {
+    display: flex;
+    flex-grow: 1;
+    flex-shrink: 1;
+    order: 1;
+    min-width: 0;
+  }
+
+  div.right {
+    order: 2;
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 300px;
+
+    .collapsible-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    div.row {
+      display: flex;
+      align-items: center;
+      height: 36px;
+
+    }
+
+    div.row > select,
+    div.row > .btn-group {
+      width: 100%;
+    }
+
+    div.speed-row {
+      display: none;
+    }
+
+    div.row > .speed-group {
+      flex: none;
+      width: 258px;
+    }
+  }
+
+  .setup-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    height: 44px;
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 0;
+      height: 40px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      color: var(--dot-text);
+      font-family: var(--dot-font);
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1;
+
+      // 누르면 그림자만큼 내려간다
+      &:active {
+        transform: translateY(4px);
+        box-shadow: none;
+      }
+    }
+
+    #btnShuffle {
+      background: var(--dot-blue);
+      box-shadow: 0 4px 0 var(--dot-ink);
+    }
+
+    #btnStart {
+      background: var(--dot-red);
+      box-shadow: 0 4px 0 var(--dot-red-deep);
+    }
+  }
+
+  select,
+  .dot-select {
+    appearance: none;
+    height: 36px;
+    width: 100%;
+    padding: 0 40px 0 12px;
+    border: 2px solid var(--dot-line-soft);
+    border-radius: 0;
+    // 계단 모양 화살표
+    background: var(--dot-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h16v2H0zM2 2h12v2H2zM4 4h8v2H4zM6 6h4v2H6z' fill='%23f4f4f4'/%3E%3C/svg%3E") right 12px center no-repeat;
+    color: var(--dot-text);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  select option {
+    background: var(--dot-bg);
+    color: var(--dot-text);
+  }
+
+  // 맵 선택: 브라우저 기본 목록 대신 쓰는 도트 목록(index.html의 스크립트가 만든다). 패널이 화면 아래에 있어 위로 펼친다.
+  div.right div.row.dot-select-row {
+    position: relative;
+  }
+
+  select.dot-select-native {
+    display: none;
+  }
+
+  .dot-select {
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dot-select-list {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 44px;
+    z-index: 5;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--dot-bg);
+    color: var(--dot-text);
+    box-shadow: 0 -4px 0 var(--dot-line-soft), 0 4px 0 var(--dot-line-soft), -4px 0 0 var(--dot-line-soft), 4px 0 0 var(--dot-line-soft), 0 12px 0 rgba(12, 11, 26, .6);
+
+    &[hidden] {
+      display: none;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 10px;
+      white-space: nowrap;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+
+      &::before {
+        content: '';
+        flex: none;
+        width: 10px;
+        height: 10px;
+        background: transparent;
+      }
+
+      &:hover,
+      &:focus {
+        background: var(--dot-band);
+      }
+
+      &.on {
+        background: var(--dot-accent);
+        color: var(--dot-bg);
+
+        &::before {
+          background: var(--dot-bg);
+        }
+      }
+    }
+  }
+
+  // 묶음 단추(당첨 순위, 배속): 고른 칸은 노랑
+  .btn-group {
+    display: flex;
+    justify-content: stretch;
+
+    & > * {
+      box-sizing: border-box;
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      height: 36px;
+      margin: 0;
+      border-radius: 0;
+      background: var(--dot-band);
+      border: 2px solid var(--dot-line);
+      padding: 0;
+      color: var(--dot-text);
+      font-size: 16px;
+      font-weight: 700;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      & + * {
+        margin-left: -2px;
+      }
+
+      &.active:before {
+        content: '';
+        flex: none;
+        width: 14px;
+        height: 14px;
+        mask: url('images/check.svg') center / contain no-repeat;
+        background: var(--dot-bg);
+      }
+
+      &.active {
+        position: relative;
+        background: var(--dot-accent);
+        // 고른 칸도 다른 칸과 같은 테두리를 둘러 칸 줄이 끊겨 보이지 않게 한다
+        border-color: var(--dot-line);
+        color: var(--dot-bg);
+      }
+    }
+
+    input[type=number] {
+      box-sizing: border-box;
+      text-align: center;
+      font-family: var(--number-font);
+      font-size: 16px;
+
+      &.active:before {
+        content: none;
+      }
+    }
+
+    .btn-speed {
+      font-family: var(--number-font);
+      font-weight: 400;
+    }
+  }
+}
+
+.result-timer-overlay {
+  position: fixed;
+  top: 105px;
+  left: 50%;
+  width: min(466px, calc(100vw - 32px));
+  height: 160px;
+  transform: translateX(-50%);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  background: var(--dot-ink);
+  box-shadow: 0 -4px 0 var(--dot-accent), 0 4px 0 var(--dot-accent), -4px 0 0 var(--dot-accent), 4px 0 0 var(--dot-accent);
+  color: var(--dot-text);
+
+  &.hidden {
+    display: none;
+  }
+
+  button {
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.12);
+    }
+  }
+
+  .result-timer-setup,
+  .result-timer-running {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .result-timer-setup {
+    display: flex;
+    gap: 20px;
+
+    strong {
+      font-family: var(--dot-font);
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--dot-accent);
+    }
+  }
+
+  .result-timer-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+
+    input[type=number] {
+      width: 76px;
+      height: 40px;
+      border: 2px solid var(--dot-line-soft);
+      border-radius: 0;
+      background: var(--dot-bg);
+      color: var(--dot-text);
+      text-align: center;
+      font-family: var(--number-font);
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    button {
+      height: 40px;
+      margin: 0 0 4px 8px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 0;
+      background: var(--dot-red);
+      box-shadow: 0 4px 0 var(--dot-red-deep);
+      color: var(--dot-text);
+      font-family: var(--dot-font);
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1;
+
+      &:active {
+        transform: translateY(4px);
+        box-shadow: none;
+      }
+    }
+  }
+
+  .result-timer-running {
+    display: none;
+    gap: 6px;
+
+    span {
+      color: var(--dot-accent);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    strong {
+      font-family: var(--number-font);
+      font-size: 64px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 400;
+      line-height: 1;
+      color: var(--dot-accent);
+      text-shadow: 4px 4px 0 var(--dot-red);
+
+      // 1시간 이상(00:00:00)은 상자 안에 들어오도록 한 단계 줄인다
+      &.long {
+        font-size: 48px;
+      }
+    }
+  }
+
+  .result-timer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 2px;
+
+    button {
+      min-width: 88px;
+      height: 28px;
+      margin-bottom: 3px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 0;
+      background: var(--dot-blue);
+      box-shadow: 0 3px 0 var(--dot-bg);
+      color: var(--dot-text);
+      font-family: var(--dot-font);
+      font-size: 12px;
+      font-weight: 700;
+
+      &:last-child {
+        background: var(--dot-box);
+      }
+
+      &:active {
+        transform: translateY(3px);
+        box-shadow: none;
+      }
+
+      &:disabled {
+        cursor: default;
+        opacity: .45;
+      }
+    }
+  }
+
+  &.running {
+    .result-timer-setup {
+      display: none;
+    }
+
+    .result-timer-running {
+      display: flex;
+    }
+  }
+}
+
+@media screen and (max-width: 750px) {
+  #settings {
+    bottom: 60px;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    width: calc(100% - 40px);
+    opacity: 1;
+    visibility: visible;
+    transition: visibility 0s, opacity 1s linear;
+
+    div.right {
+      width: 100%;
+    }
+
+    .collapsible-rows {
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      min-height: 60px;
+      font-size: 16px;
+    }
+  }
+
+  .result-timer-overlay {
+    top: 70px;
+    left: 50%;
+
+    .result-timer-running strong {
+      font-size: 48px;
+    }
+  }
+}
+
+div.toast {
+  position: fixed;
+  transform: translate(-50%, 0);
+  padding: 12px 20px;
+  border-radius: 0;
+  background: var(--dot-ink);
+  color: var(--dot-text);
+  font-family: var(--dot-font);
+  font-size: 24px;
+  line-height: 1;
+  box-shadow: 0 -4px 0 var(--dot-cyan), 0 4px 0 var(--dot-cyan), -4px 0 0 var(--dot-cyan), 4px 0 0 var(--dot-cyan);
+  overflow: hidden;
+  bottom: 14px;
+  left: 50%;
+  z-index: 1000;
+  animation: .2s linear fade-in, .2s linear 1s reverse fade-in;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 100%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+// 이름표(왼쪽 위, 미니맵 위): 난워니 기반 시제품의 이름표를 그대로 옮겼다(2026-11-18). 색은 그 시제품 값 그대로.
+.brand-mark {
+  // 바로 아래 미니맵 틀과 양옆 끝을 맞춘다. 미니맵은 화면 폭 1280px 이상에서 왼쪽 20px·폭 208px이고,
+  // 그보다 좁으면 화면 폭에 비례해 줄어든다. --mm-scale(src/lilpaBrand.ts가 넣음)로 이름표 전체를 같은 비율로 줄인다
+  position: fixed;
+  top: calc(20px * var(--mm-scale, 1));
+  left: calc(20px * var(--mm-scale, 1));
+  transform: scale(var(--mm-scale, 1));
+  transform-origin: 0 0;
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 208px;
+  height: 56px;
+  padding: 0 6px;
+  // 2026-11-18 "이름표 색이 밤티인데? 테두리도 미니맵 색이랑 달라서": 미니맵과 한 덩어리로 보이게
+  // 바탕 = 미니맵 바탕(Themes.dark.minimapBackground #181a27), 테두리 = 미니맵 틀(DOT_LINE = --dot-line)과 같은 색·모양
+  // (미니맵 틀: 2px 선 + 바깥 2px 막대, 모서리가 비는 도트 테두리 → 바깥 3px 십자 그림자 + 안쪽 1px)
+  background: #181a27;
+  box-shadow: 0 -3px 0 var(--dot-line), 0 3px 0 var(--dot-line), -3px 0 0 var(--dot-line), 3px 0 0 var(--dot-line), inset 0 0 0 1px var(--dot-line);
+  pointer-events: none;
+
+  // 기본 박쥐 공(src/lilpaBrand.ts가 --brand-ball로 넣는다)
+  .brand-ball {
+    position: relative;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    background: #181a27;
+    box-shadow: 0 0 0 2px var(--dot-line);
+
+    // 박쥐 그림만 따로 그려서 공 빛(C)과 같은 연보라 빛을 살짝 두른다(두 번 겹침)
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--brand-ball, none) center / 92% no-repeat;
+      filter: drop-shadow(0 0 2px rgba(160, 150, 255, 0.9)) drop-shadow(0 0 2px rgba(160, 150, 255, 0.9));
+    }
+  }
+
+  strong {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    overflow: hidden;
+    color: var(--dot-accent); // 호박색 #ffb04a: 강조색은 바탕이 아니라 글씨에
+    font-family: var(--dot-font);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
